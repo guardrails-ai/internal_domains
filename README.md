@@ -1,6 +1,7 @@
 # Overview
 
 | Developed by | David Tam |
+| --- | --- |
 | Date of development | Aug 13, 2024 |
 | Validator type | Format |
 | License | Apache 2 |
