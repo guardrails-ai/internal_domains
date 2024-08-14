@@ -1,27 +1,30 @@
 # to run these, run 
 # make tests
 
-from guardrails import Guard
-import pytest
-from validator import ValidatorTemplate
+# import InternalDomains from main.py in validator folder
+from validator.main import InternalDomains
+from guardrails.validator_base import PassResult, FailResult
 
-# We use 'exception' as the validator's fail action,
-#  so we expect failures to always raise an Exception
-# Learn more about corrective actions here:
-#  https://www.guardrailsai.com/docs/concepts/output/#%EF%B8%8F-specifying-corrective-actions
-guard = Guard.from_string(validators=[ValidatorTemplate(arg_1="arg_1", arg_2="arg_2", on_fail="exception")])
+# Run tests via `pytest -rP ./internal_domains.py`
+class TestInternalDomains:
+    def test_success_case(self):
+        pass_input = """
+        This is a string with no domains except a reference to https://www.example.com  
+        """
+        validator = InternalDomains(internal_domains=["internal.company.com"])
+        result = validator.validate(pass_input, {})
+        assert isinstance(result, PassResult) is True
 
-def test_pass():
-  test_output = "pass"
-  result = guard.parse(test_output)
-  
-  assert result.validation_passed is True
-  assert result.validated_output == test_output
-
-def test_fail():
-  with pytest.raises(Exception) as exc_info:
-    test_output = "fail"
-    guard.parse(test_output)
-  
-  # Assert the exception has your error_message
-  assert str(exc_info.value) == "Validation failed for field with errors: {A descriptive but concise error message about why validation failed}"
+    def test_failure_case(self):
+        fail_input = """
+This is a comprehensive resource for articles and information related to our company policies and procedures. 
+You can access it [here](https://kb.internal.company.com/api/v1/articles). You can learn more about projects [here](https://project-x.company.com/api/v1/articles).
+"""
+        validator = InternalDomains(internal_domains=["internal.company.com", "project-x.company.com"])
+        result = validator.validate(fail_input, {})
+        assert isinstance(result, FailResult) is True
+        assert result.error_message == "Found internal domains: https://kb.internal.company.com/api/v1/articles, https://project-x.company.com/api/v1/articles"
+        assert result.fix_value == """
+This is a comprehensive resource for articles and information related to our company policies and procedures. 
+You can access it [here](***********************************************). You can learn more about projects [here](*********************************************).
+"""
