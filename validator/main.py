@@ -1,6 +1,6 @@
 import re
 
-from typing import Any, Callable, Dict, Optional, List
+from typing import Callable, Dict, Optional, List
 
 from guardrails.validator_base import (
     ErrorSpan,
